@@ -1,0 +1,144 @@
+#!/bin/sh
+
+# pure shell alternatives to external commands
+
+# Literal assignment of new line and tabspace
+NewLine="
+"
+TabSpace="	"
+
+
+TempFile=$(mktemp)
+Sh_exit () {
+	rm -f "$TempFile"
+}
+trap "Sh_exit" EXIT
+
+# Stores stdin in a variable named $1
+# mapfile alternative
+Sh_readvar () {
+	_VarName=$1
+	_Var=
+	while IFS= read _Line || [ -n "$_Line" ]; do
+		_Var="$_Var$NewLine$_Line"
+	done
+	_Var="${_Var#$NewLine}"
+	eval $_VarName=\$_Var
+	unset _VarName _Var _Line _File
+}
+
+# Translates all characters in $1 to the $2
+# Data is read from stdin
+Sh_tr () {
+	IFS=$1
+	_Ofs=$2
+	Sh_readvar _Text
+	set -- $_Text
+	printf "%s" "$1"
+	shift
+	[ -n "$1" ] && printf "$_Ofs%s" $*
+	unset IFS _Ofs _Text
+}
+
+# Prints file to stdout
+Sh_cat () {
+	while IFS= read _Line; do
+		printf "%s\n" "$_Line"
+	done <"$1"
+	unset _Line
+}
+
+# Replicates cut, the fields need to be modified
+Sh_cut () {
+	_Delimeter=${1:-$TabSpace}
+	while IFS=Delimeter read _F1 _F2 _F3 _F4 _F5 _; do
+		eval _Out="$2"
+		printf "%s\n" "$_Out"
+	done
+	unset _Delimeter _F1 _F2 _F3 _F4 _F5 _ _Out
+}
+
+Sh_wc_char () {
+	printf "%d\n" "${#1}"
+}
+
+Sh_wc_line () {
+	_LineNumber=0
+	while IFS= read _ || [ -n "$_" ] ; do
+		_LineNumber=$((_LineNumber+1))
+	done
+	printf "%d\n" "$_LineNumber"
+	unset _ _LineNumber
+}
+
+# Prints lines matching pattern
+# Pattern needs to be in shell patterns ( * ! [ ? )
+# Line pattern, to identify the line
+# Example: *[Ll]inu?*
+Sh_grep () {
+	while IFS= read _Line || [ -n "$_Line" ]; do
+		case $_Line in
+			$1) printf "%s\n" "$_Line" ;;
+		esac
+	done
+	unset _Line
+}
+
+# Substitutes pattern in $1
+# with string in $2
+# Pattern needs to be in shell patterns
+# Word pattern ( to identify the word only the word ) do not add * in the ends
+# Example: ra??[!j]t
+Sh_gsub () {
+	_Pattern=$1
+	_Replace=$2
+	while IFS= read _Line || [ -n "$_Line" ]; do
+		_Hold=
+		while :; do
+			case $_Line in
+				*${_Pattern}*)
+					_Hold="$_Hold${_Line%%${_Pattern}*}${_Replace}"
+					_Line="${_Line#*${_Pattern}}"
+					;;
+				*)
+					printf "%s\n" "$_Hold$_Line"
+					break ;;
+			esac
+		done
+	done
+	unset _Line _Pattern _Replace
+}
+
+# Substitutes only the first occurrence in every line
+Sh_sub () {
+	_Pattern=$1
+	_Replace=$2
+	while IFS= read _Line || [ -n "$_Line" ]; do
+		case $_Line in
+			*${_Pattern}*)
+				_Line="${_Line%%${_Pattern}*}${_Replace}${_Line#*${_Pattern}}";;
+		esac
+		printf "%s\n" "$_Line"
+	done
+	unset _Line _Pattern _Replace
+}
+
+
+# Examples
+
+#Reading contents into variable
+Sh_readvar Var1 <<EOF
+Cat bat dat
+dash hat
+some more text
+EOF
+
+Sh_gsub "?at" "aaaaa" << EOF
+$Var1
+EOF
+
+# external command into a variable with out subshell
+lsblk > "$TempFile"
+Sh_readvar CommandOutput < "$TempFile"
+
+printf "%s\n" "$CommandOutput"
