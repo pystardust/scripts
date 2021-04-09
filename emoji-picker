@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Copy emojies into clipboard, using dmenu
 # dependencies: "dmenu" "xclip" "notify-send"
 
 TempFile=$(mktemp)
