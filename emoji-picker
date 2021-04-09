@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# dependencies: "dmenu" "xclip" "notify-send"
+
+TempFile=$(mktemp)
+
+dmenu -l 15 -p "Emoji:" > "$TempFile" <<EOF
+[😆] very happy
+[😂] laugh
+[🤣] laugh more
+[😅] embarrassment laugh
+[🙂] regular smile
+[☺] bigger smile
+[😊] satisfaction smile
+[😉] wink
+[🥰] loved
+[😍] love eyes
+[🤩] awesome
+[😘] kiss
+[😋] yum tasty
+[🤤] drooling tasty
+[😛] tongue out funny
+[😝] tongue out epic funny
+[🤑] rich money
+[🤗] hug
+[🤫] shhh silent
+[🤔] thinking
+[😑] bum face
+[😬] yikes messed it up
+[😪] sleepy
+[🤒] fever sick
+[🤯] head blown amazed
+[🥶] freeze"
+EOF
+
+read -r Emoji < "$TempFile"
+
+Emoji=${Emoji#[}
+Emoji=${Emoji%%]*}
+
+# Copy emoji to clip board
+xclip -sel clip <<EOF
+$Emoji
+EOF
+
+# Norification
+[ $? -eq 0 ] && notify-send "Emoji selector" "Copied $Emoji to clipboard"
+
+
+rm -f "$TempFile"
