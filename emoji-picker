@@ -36,16 +36,17 @@ EOF
 
 read -r Emoji < "$TempFile"
 
+[ -z "$Emoji" ] && exit
+
 Emoji=${Emoji#[}
 Emoji=${Emoji%%]*}
 
 # Copy emoji to clip board
-xclip -sel clip <<EOF
-$Emoji
-EOF
+printf "%s" "$Emoji" > "$TempFile"
+xclip -sel clip "$TempFile"
 
 # Norification
-[ $? -eq 0 ] && notify-send "Emoji selector" "Copied $Emoji to clipboard"
+[ $? -eq 0 ] && notify-send "Emoji selector" "Copied ${Emoji} to clipboard"
 
 
 rm -f "$TempFile"
