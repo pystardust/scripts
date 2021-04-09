@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Notifies user when battery drops to <=15%
+# dependencies "notify-send"
+
+# Might need to be modified depending on the device (BAT0, BAT1, BAT2)
+BatteryDir="/sys/class/power_supply/BAT1"
+# Battery percentage to notify at
+MinPercent=15
+# Checks every 10 minutes
+Refresh=600
+
+while :; do
+	read -r BatStatus < "$BatteryDir/status"
+	read -r BatPercent < "$BatteryDir/capacity"
+	if [ "$BatStatus" = "Discharging" ] && [ $BatPercent -le $MinPercent ]; then
+		notify-send -u critical "Low Battery: $BatPercent%"
+	fi
+	sleep $Refresh
+done 
