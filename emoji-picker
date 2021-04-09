@@ -4,6 +4,10 @@
 # dependencies: "dmenu" "xclip" "notify-send"
 
 TempFile=$(mktemp)
+trap "Sh_exit" EXIT
+Sh_exit () {
+	rm -f "$TempFile"
+}
 
 dmenu -l 15 -p "Emoji:" > "$TempFile" <<EOF
 [😆] very happy
@@ -47,6 +51,3 @@ xclip -sel clip "$TempFile"
 
 # Norification
 [ $? -eq 0 ] && notify-send "Emoji selector" "Copied ${Emoji} to clipboard"
-
-
-rm -f "$TempFile"
