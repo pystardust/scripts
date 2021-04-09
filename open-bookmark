@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# open bookmarks in browser using dmenu
+# dependencies "dmenu" any browser
+
+# Browser command
+Browser="qutebrowser"
+
+TempFile=$(mktemp)
+
+dmenu -p "Open: " -l 15 > "$TempFile" << EOF
+[duckduckgo]start.duckduckgo.com
+[reddit]reddit.com
+[suckless]suckless.org
+[monkeytype]monkeytype.com
+[keybr]keybr.com
+[github]github.com
+EOF
+
+read -r Url < "$TempFile"
+[ -n "$Url" ] && $Browser "${Url#*]}"
+
+rm -f "$TempFile"
