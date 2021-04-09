@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# pure shell alternatives to external commands
+# pure shell alternatives (limited) to external commands
 
 # Literal assignment of new line and tabspace
 NewLine="
@@ -24,7 +24,7 @@ Sh_readvar () {
 	done
 	_Var="${_Var#$NewLine}"
 	eval $_VarName=\$_Var
-	unset _VarName _Var _Line _File
+	unset _VarName _Var _Line
 }
 
 # Translates all characters in $1 to the $2
