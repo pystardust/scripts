@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Copy emojies into clipboard, using dmenu
-# dependencies: "dmenu" "xclip" "notify-send"
+# type emojies using dmenu
+# dependencies: "dmenu" "xdotool"
 
 TempFile=$(mktemp)
 trap "Sh_exit" EXIT
@@ -45,9 +45,5 @@ read -r Emoji < "$TempFile"
 Emoji=${Emoji#[}
 Emoji=${Emoji%%]*}
 
-# Copy emoji to clip board
-printf "%s" "$Emoji" > "$TempFile"
-xclip -sel clip "$TempFile"
-
-# Norification
-[ $? -eq 0 ] && notify-send "Emoji selector" "Copied ${Emoji} to clipboard"
+# type emoji directly
+xdotool getactivewindow type "$Emoji"
