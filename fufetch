@@ -1,0 +1,45 @@
+#!/bin/sh
+## fufetch
+
+c_yellow="\033[1;33m"
+c_blue="\033[1;34m"
+c_magenta="\033[1;35m"
+c_reset="\033[0m"
+
+space="          "
+get_pkg_count () {
+	# change this to your distro's package count
+	printf "${space}pkgs    $(pacman -Q | wc -l)\n"
+}
+
+get_mem () {
+	free --mega | sed -n -E '2s/^[^0-9]*([0-9]+) *([0-9]+).*/'"${space}"'mem     \2\/\1m/p'
+}
+
+get_info () {
+	read -r _ _ ker _ < /proc/version
+	IFS=. read -r uptime _ < /proc/uptime
+	user=$USER
+	read -r hostname < /etc/hostname
+	read -r host < /sys/devices/virtual/dmi/id/product_name
+	. /etc/os-release
+	os=$PRETTY_NAME
+
+	case $(($uptime % 4)) in
+		0) v="" ;;
+		1) v=" " ;;
+		2) v="  " ;;
+		3) v="   " ;;
+	esac
+
+	printf -- "${v}(00)\"\n"
+	printf -- " ,_|_     ${c_blue}os      ${c_reset}$os\n"
+	printf -- "   | '    ${c_blue}host    ${c_reset}$host\n"
+	printf -- "  .--.    ${c_blue}ker     ${c_reset}$ker\n"
+	printf -- " /   |    ${c_blue}uptime  ${c_reset}$((uptime/3600))h,$((uptime/60 % 60))m\n"
+}
+
+get_info &
+get_mem &
+get_pkg_count &
+wait
