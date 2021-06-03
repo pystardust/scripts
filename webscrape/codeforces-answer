@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# usage : codeforces-answer 439 A
+# shows the best solutions one by one
+
+prob_num=$1
+prob_letter=$2
+
+
+get_top_answer_id () {
+	url="https://codeforces.com/problemset/status/$prob_num/problem/$prob_letter?order=BY_CONSUMED_TIME_ASC"
+	curl -s "$url" |
+	grep -o "submissionId=\"[^\"]*\"" |
+	{
+		while IFS=\" read _ id ; do
+			printf "%d\n" "$id"
+		done
+	}
+}
+
+get_code_id () {
+	id=$1
+	url="https://codeforces.com/problemset/submission/$prob_num/$id"
+	
+	curl -s "$url" | sed -n -E -e '
+	/ *<pre id="program-source-text/,\_</pre>_{
+		 s_ *</?pre[^>]*>__g
+		 p
+	 }
+	' | recode html..ascii
+}
+
+
+
+for id in $(get_top_answer_id); do
+	get_code_id "$id" | less
+	printf "%s" "Show next answer?[y/N] "
+	read ans
+	case $ans in
+		[yY])
+
+			;;
+		'')
+			break
+			;;
+	esac
+done 
