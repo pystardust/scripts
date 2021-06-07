@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# pure shell alternatives (limited) to external commands
+# pure shell alternatives to external commands
 
 # Literal assignment of new line and tabspace
 NewLine="
@@ -9,20 +9,26 @@ TabSpace="	"
 
 
 TempFile=$(mktemp)
+
 Sh_exit () {
 	rm -f "$TempFile"
 }
+# remove the tempfile at exit
 trap "Sh_exit" EXIT
 
 # Stores stdin in a variable named $1
-# mapfile alternative
+# similar to mapfile in bash but stores it all
+# in the same variable
 Sh_readvar () {
 	_VarName=$1
 	_Var=
+	# checking if last line is not empty is necessary when
+	# the last line doesn't have \n
+	# which leads to read giving a non zero exit status
 	while IFS= read _Line || [ -n "$_Line" ]; do
-		_Var="$_Var$NewLine$_Line"
+		_Var=$_Var$NewLine$_Line
 	done
-	_Var="${_Var#$NewLine}"
+	_Var=${_Var#$NewLine}
 	eval $_VarName=\$_Var
 	unset _VarName _Var _Line
 }
@@ -48,14 +54,13 @@ Sh_cat () {
 	unset _Line
 }
 
-# Replicates cut, the fields need to be modified
+# Replicates cut, the field needs to be modified
 Sh_cut () {
 	_Delimeter=${1:-$TabSpace}
-	while IFS=Delimeter read _F1 _F2 _F3 _F4 _F5 _; do
-		eval _Out="$2"
-		printf "%s\n" "$_Out"
+	while IFS=$_Delimeter read _F1 _F2 _F3 _F4 _F5 _; do
+		printf "%s\n" "$_F2"
 	done
-	unset _Delimeter _F1 _F2 _F3 _F4 _F5 _ _Out
+	unset _Delimeter _F1 _F2 _F3 _F4 _F5
 }
 
 Sh_wc_char () {
@@ -68,7 +73,7 @@ Sh_wc_line () {
 		_LineNumber=$((_LineNumber+1))
 	done
 	printf "%d\n" "$_LineNumber"
-	unset _ _LineNumber
+	unset _LineNumber
 }
 
 # Prints lines matching pattern
@@ -128,9 +133,14 @@ Sh_sub () {
 
 #Reading contents into variable
 Sh_readvar Var1 <<EOF
-Cat bat dat
+Cat bot dat
 dash hat
 some more text
+EOF
+
+Sh_cut <<EOF
+cut	1
+cut	2
 EOF
 
 Sh_gsub "?at" "aaaaa" << EOF
@@ -140,5 +150,4 @@ EOF
 # external command into a variable with out subshell
 lsblk > "$TempFile"
 Sh_readvar CommandOutput < "$TempFile"
-
 printf "%s\n" "$CommandOutput"
