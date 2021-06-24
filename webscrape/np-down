@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# download newspapers from `https://dailyepaper.in/home/`
+# https://github.com/pystardust/scripts
+# email: notpiestardust@gmail.com
+
+# USAGE: np-down
+# after date selection, download will start
+# to change newspaper, select the newspaper in the below site
+# https://dailyepaper.in/home/
+# choose newspapers and set its url below
+
+newspaper_url="https://dailyepaper.in/the-hindu-pdf-epaper-download-2021/" #The Hindu newspaper
+# newspaper_url="https://dailyepaper.in/times-of-india-epaper-pdf-download-2020/" #Times Of India
+# newspaper_url="https://dailyepaper.in/economic-times-newspaper-today/" #The economic Times
+
+
+
+tab_space=$(printf '\t')
+gap="                                                                        "
+gap=$gap$gap$gap
+gap=$gap$gap$gap
+
+html=$(curl -s "$newspaper_url")
+selection=$(
+	{
+		pattern='<p style="text-align: center;">'
+		while IFS= read line; do
+			case $line in
+				("$pattern"*vk.com*)
+					date=${line%${line#*20[0-9][0-9]}}
+					date=${date##*'>'}
+					link=${line#*vk.com}
+					link=${link%%\"*}
+					printf '%s\t%s\t%s\n' "$date" "$gap" "$link"
+					;;
+			esac
+		done <<-!
+		$html
+		!
+	} | fzf -d "$tab_space" -n 1
+)
+
+[ -z "$selection" ] && exit 0
+
+paper_url="https://vk.com${selection##*$tab_space}"
+
+download_url=$(curl -s "$paper_url" | grep -o 'https://[^"]*\.pdf')
+curl -O# "$download_url"
